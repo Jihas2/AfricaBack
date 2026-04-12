@@ -1,15 +1,16 @@
 package com.romeogolf.residence.reservation;
 
+import com.romeogolf.residence.reservation.dto.ReservationMessageDto;
 import com.romeogolf.residence.reservation.dto.ReservationRequest;
 import com.romeogolf.residence.reservation.dto.ReservationStatusRequest;
 import com.romeogolf.residence.shared.ApiResponse;
 import com.romeogolf.residence.shared.exception.ApiException;
 import com.romeogolf.residence.user.User;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,6 +24,7 @@ public class ReservationController {
     private final ReservationService           reservationService;
     private final ReservationRepository        reservationRepository;
     private final ReservationMessageRepository messageRepository;
+    private final SimpMessagingTemplate        messagingTemplate;
 
     // ─── User ─────────────────────────────────────────────────────────────────
 
@@ -78,7 +80,9 @@ public class ReservationController {
                 .senderType(ReservationMessage.SenderType.BUYER)
                 .content(content)
                 .build();
-        return ResponseEntity.status(201).body(ApiResponse.ok(messageRepository.save(msg)));
+        ReservationMessage saved = messageRepository.save(msg);
+        messagingTemplate.convertAndSend("/topic/reservation/" + id, ReservationMessageDto.from(saved));
+        return ResponseEntity.status(201).body(ApiResponse.ok(saved));
     }
 
     // ─── Admin ────────────────────────────────────────────────────────────────
@@ -128,7 +132,9 @@ public class ReservationController {
                 .senderType(ReservationMessage.SenderType.ADMIN)
                 .content(content)
                 .build();
-        return ResponseEntity.status(201).body(ApiResponse.ok(messageRepository.save(msg)));
+        ReservationMessage saved = messageRepository.save(msg);
+        messagingTemplate.convertAndSend("/topic/reservation/" + id, ReservationMessageDto.from(saved));
+        return ResponseEntity.status(201).body(ApiResponse.ok(saved));
     }
 
     @GetMapping("/api/admin/reservations/{id}/messages/unread")

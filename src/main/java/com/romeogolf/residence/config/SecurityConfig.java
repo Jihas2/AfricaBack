@@ -44,9 +44,12 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET,  "/api/gallery").permitAll()
                 .requestMatchers(HttpMethod.GET,  "/api/amenities").permitAll()
                 .requestMatchers(HttpMethod.GET,  "/uploads/**").permitAll()
+                .requestMatchers("/ws/**").permitAll()
+                .requestMatchers("/api/webhooks/**").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/reservations/**").authenticated()
                 .requestMatchers("/api/my-sales").authenticated()
+                .requestMatchers("/api/checkout/**").authenticated()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

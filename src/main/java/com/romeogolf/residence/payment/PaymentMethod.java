@@ -4,5 +4,8 @@ public enum PaymentMethod {
     VIREMENT,
     ESPECES,
     CHEQUE,
-    MOBILE_MONEY
+    MOBILE_MONEY,
+    STRIPE,
+    PAYPAL,
+    CINETPAY
 }

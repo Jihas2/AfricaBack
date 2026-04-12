@@ -78,6 +78,15 @@ public class PaymentService {
         return saved;
     }
 
+    @Transactional
+    public void markReceived(Long paymentId, String reference) {
+        Payment payment = getById(paymentId);
+        payment.setStatus(PaymentStatus.RECU);
+        if (reference != null) payment.setReference(reference);
+        paymentRepository.save(payment);
+        recalculateSalePaidAmount(payment.getSale());
+    }
+
     private void recalculateSalePaidAmount(Sale sale) {
         BigDecimal totalPaid = paymentRepository.findBySaleId(sale.getId()).stream()
                 .filter(p -> p.getStatus() == PaymentStatus.DEPOSE || p.getStatus() == PaymentStatus.RECU)

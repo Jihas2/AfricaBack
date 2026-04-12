@@ -16,7 +16,7 @@ public class ListingService {
 
     // ─── Public ──────────────────────────────────────────────────────────────
     public List<Listing> getPublished() {
-        return listingRepository.findByStatus(ListingStatus.PUBLIE);
+        return listingRepository.findByStatusIn(List.of(ListingStatus.PUBLIE, ListingStatus.VENDU));
     }
 
     // ─── Admin ───────────────────────────────────────────────────────────────
