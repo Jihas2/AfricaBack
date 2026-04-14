@@ -24,6 +24,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 
 @Service
@@ -49,6 +51,8 @@ public class StripeCheckoutService {
         Sale sale = saleRepository.findById(req.getSaleId())
                 .orElseThrow(() -> new ApiException("Vente introuvable.", HttpStatus.NOT_FOUND));
 
+        CheckoutValidator.validateOwnershipAndAmount(sale, user, req.getAmount());
+
         Payment payment = Payment.builder()
                 .sale(sale)
                 .amount(req.getAmount())
@@ -61,6 +65,7 @@ public class StripeCheckoutService {
         try {
             long amountCents = req.getAmount()
                     .multiply(new BigDecimal("100"))
+                    .setScale(0, RoundingMode.HALF_UP)
                     .longValue();
 
             SessionCreateParams params = SessionCreateParams.builder()
@@ -92,8 +97,10 @@ public class StripeCheckoutService {
     }
 
     @Transactional
-    public void handleWebhook(String payload, String sigHeader) {
+    public void handleWebhook(byte[] rawPayload, String sigHeader) {
         Stripe.apiKey = secretKey;
+        // Use the raw bytes decoded as UTF-8 to guarantee HMAC-SHA256 signature integrity.
+        String payload = new String(rawPayload, StandardCharsets.UTF_8);
         try {
             Event event = Webhook.constructEvent(payload, sigHeader, webhookSecret);
             if ("checkout.session.completed".equals(event.getType())) {

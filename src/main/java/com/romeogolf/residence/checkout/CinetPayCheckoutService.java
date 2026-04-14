@@ -10,6 +10,7 @@ import com.romeogolf.residence.sale.SaleRepository;
 import com.romeogolf.residence.shared.exception.ApiException;
 import com.romeogolf.residence.user.User;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CinetPayCheckoutService {
@@ -45,6 +47,8 @@ public class CinetPayCheckoutService {
     public String initPayment(CheckoutRequest req, User user) {
         Sale sale = saleRepository.findById(req.getSaleId())
                 .orElseThrow(() -> new ApiException("Vente introuvable.", HttpStatus.NOT_FOUND));
+
+        CheckoutValidator.validateOwnershipAndAmount(sale, user, req.getAmount());
 
         Payment payment = Payment.builder()
                 .sale(sale)
@@ -123,8 +127,9 @@ public class CinetPayCheckoutService {
                 if (data != null && "ACCEPTED".equals(data.get("status"))) {
                     paymentService.markReceived(payment.getId(), transactionId);
                 }
-            } catch (Exception ignored) {
-                // CinetPay will retry the IPN notification
+            } catch (Exception e) {
+                // CinetPay will retry the IPN notification — log the error for monitoring
+                log.error("CinetPay IPN processing failed for transaction {}: {}", transactionId, e.getMessage(), e);
             }
         });
     }

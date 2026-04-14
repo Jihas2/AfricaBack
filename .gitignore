@@ -1,0 +1,14 @@
+# Environment — NEVER commit this file (contains real API keys)
+.env
+
+# Maven
+target/
+*.class
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Uploads
+uploads/

@@ -81,6 +81,10 @@ public class PaymentService {
     @Transactional
     public void markReceived(Long paymentId, String reference) {
         Payment payment = getById(paymentId);
+        // Idempotency guard: webhook retries must not re-process an already confirmed payment.
+        if (payment.getStatus() == PaymentStatus.RECU || payment.getStatus() == PaymentStatus.DEPOSE) {
+            return;
+        }
         payment.setStatus(PaymentStatus.RECU);
         if (reference != null) payment.setReference(reference);
         paymentRepository.save(payment);

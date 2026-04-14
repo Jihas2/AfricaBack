@@ -103,6 +103,13 @@
       <version>25.3.0</version>
     </dependency>
 
+    <!-- .env file support — loads .env into Spring properties automatically -->
+    <dependency>
+      <groupId>me.paulschwarz</groupId>
+      <artifactId>spring-dotenv</artifactId>
+      <version>3.0.0</version>
+    </dependency>
+
     <!-- Test -->
     <dependency>
       <groupId>org.springframework.boot</groupId>

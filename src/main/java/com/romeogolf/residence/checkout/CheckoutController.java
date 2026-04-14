@@ -14,9 +14,10 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class CheckoutController {
 
-    private final StripeCheckoutService  stripe;
-    private final PaypalCheckoutService  paypal;
+    private final StripeCheckoutService   stripe;
+    private final PaypalCheckoutService   paypal;
     private final CinetPayCheckoutService cinetpay;
+    private final VirementCheckoutService virement;
 
     // ─── Initiation (authenticated buyer) ────────────────────────────────────
 
@@ -41,6 +42,13 @@ public class CheckoutController {
         return ResponseEntity.ok(ApiResponse.ok(Map.of("url", cinetpay.initPayment(req, user))));
     }
 
+    @PostMapping("/api/checkout/virement")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> virementInit(
+            @Valid @RequestBody CheckoutRequest req,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(ApiResponse.ok("Virement initialisé.", virement.initiate(req, user)));
+    }
+
     // ─── PayPal capture (called by frontend after approval redirect) ──────────
 
     @PostMapping("/api/checkout/paypal/capture")
@@ -55,7 +63,7 @@ public class CheckoutController {
 
     @PostMapping("/api/webhooks/stripe")
     public ResponseEntity<Void> stripeWebhook(
-            @RequestBody String payload,
+            @RequestBody byte[] payload,
             @RequestHeader("Stripe-Signature") String sig) {
         stripe.handleWebhook(payload, sig);
         return ResponseEntity.ok().build();
